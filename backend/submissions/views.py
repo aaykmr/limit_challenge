@@ -1,5 +1,5 @@
 from django.db.models import Count, OuterRef, Subquery
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
 
 from submissions import models, serializers
 from submissions.filters.submission import SubmissionFilterSet
@@ -8,6 +8,7 @@ from submissions.filters.submission import SubmissionFilterSet
 class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Submission.objects.all()
     filterset_class = SubmissionFilterSet
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related("broker", "company", "owner")
@@ -33,4 +34,5 @@ class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
 class BrokerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Broker.objects.all()
     serializer_class = serializers.BrokerSerializer
+    permission_classes = [permissions.IsAuthenticated]
 

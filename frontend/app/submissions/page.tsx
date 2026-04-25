@@ -23,15 +23,16 @@ import {
   Tooltip,
   Typography,
   IconButton,
-  useMediaQuery,
 } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 
 import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
+import { useSession } from '@/lib/hooks/useAuth';
 import { useSubmissionsList } from '@/lib/hooks/useSubmissions';
 import { SubmissionStatus, SubmissionPriority } from '@/lib/types';
+import PriorityCaretIcon from '@/app/components/PriorityCaretIcon';
 import styles from './page.module.scss';
 
 const STATUS_OPTIONS: { label: string; value: SubmissionStatus | '' }[] = [
@@ -69,7 +70,8 @@ function SubmissionsPageContent() {
   const [companyInput, setCompanyInput] = useState(initialCompanyQuery);
   const [pageFilter, setPageFilter] = useState(initialPage);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const isDesktopLayout = useMediaQuery('(min-width:1300px)');
+  const [isClientHydrated, setIsClientHydrated] = useState(false);
+  const sessionQuery = useSession();
 
   const filters = useMemo(
     () => ({
@@ -114,32 +116,6 @@ function SubmissionsPageContent() {
     return 1;
   };
 
-  const PriorityCaretIcon = ({ level }: { level: 1 | 2 | 3 }) => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      {level >= 1 && (
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12 0.265198L19.2066 8.02618L18.4738 8.70663L12 1.73481L5.52617 8.70663L4.79338 8.02618L12 0.265198Z"
-        />
-      )}
-      {level >= 2 && (
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12 4.7652L19.2066 12.5262L18.4738 13.2066L12 6.23481L5.52617 13.2066L4.79338 12.5262L12 4.7652Z"
-        />
-      )}
-      {level >= 3 && (
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12 9.265198L19.2066 17.0262L18.4738 17.7066L12 10.7348L5.52617 17.7066L4.79338 17.0262L12 9.265198Z"
-        />
-      )}
-    </svg>
-  );
-
   const renderPriorityIndicator = (priority: SubmissionPriority, priorityDisplay: string) => (
     <Tooltip title={`Priority: ${priorityDisplay}`} arrow>
       <Box
@@ -169,6 +145,10 @@ function SubmissionsPageContent() {
   };
 
   useEffect(() => {
+    setIsClientHydrated(true);
+  }, []);
+
+  useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       if (companyInput !== companySearchFilter) {
         setCompanySearchFilter(companyInput);
@@ -192,6 +172,110 @@ function SubmissionsPageContent() {
     window.history.replaceState(null, '', nextUrl);
   }, [statusFilter, priorityFilter, brokerIdFilter, companySearchFilter, pageFilter, pathname]);
 
+  useEffect(() => {
+    if (sessionQuery.isSuccess && !sessionQuery.data.isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [router, sessionQuery.isSuccess, sessionQuery.data]);
+
+  if (!isClientHydrated || sessionQuery.isLoading) {
+    return (
+      <Container maxWidth={false} className={styles.pageContainer}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress size={64} thickness={4.5} />
+        </Box>
+      </Container>
+    );
+  }
+
+  if (sessionQuery.isError) {
+    return (
+      <Container maxWidth={false} className={styles.pageContainer}>
+        Unable to verify session right now. Please refresh.
+      </Container>
+    );
+  }
+
+  const renderFiltersPanel = () => (
+    <Card variant="outlined" sx={{ borderRadius: CARD_RADIUS }}>
+      <CardContent>
+        <Box className={styles.filtersStack}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h6">Filters</Typography>
+            <Button
+              size="small"
+              onClick={() => setMobileFiltersOpen(false)}
+              sx={{ borderRadius: INPUT_RADIUS, display: { xs: 'inline-flex', lg: 'none' } }}
+            >
+              Hide filters
+            </Button>
+          </Box>
+          <Divider />
+          <TextField
+            select
+            label="Status"
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value as SubmissionStatus | '');
+              setPageFilter(1);
+            }}
+            fullWidth
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <MenuItem key={option.value || 'all'} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            label="Priority"
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
+            value={priorityFilter}
+            onChange={(event) => {
+              setPriorityFilter(event.target.value as SubmissionPriority | '');
+              setPageFilter(1);
+            }}
+            fullWidth
+          >
+            {PRIORITY_OPTIONS.map((option) => (
+              <MenuItem key={option.value || 'all-priority'} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            label="Broker"
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
+            value={brokerIdFilter}
+            onChange={(event) => {
+              setBrokerIdFilter(event.target.value);
+              setPageFilter(1);
+            }}
+            fullWidth
+          >
+            <MenuItem value="">All brokers</MenuItem>
+            {brokerQuery.data?.map((broker) => (
+              <MenuItem key={broker.id} value={String(broker.id)}>
+                {broker.name}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={clearAllFilters}
+            sx={{ borderRadius: INPUT_RADIUS }}
+          >
+            Clear all filters
+          </Button>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <Container maxWidth={false} className={styles.pageContainer}>
       <Box className={styles.pageStack}>
@@ -206,97 +290,24 @@ function SubmissionsPageContent() {
 
         <Box className={styles.layoutGrid}>
           <Box>
-            {!isDesktopLayout && (
-              <Tooltip title="Show filters">
-                <IconButton
-                  onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-                  sx={{ border: '1px solid', borderColor: 'divider', mb: 1.5 }}
-                  aria-label="Show filters"
-                >
-                  <FilterList />
-                </IconButton>
-              </Tooltip>
-            )}
-            <Collapse in={isDesktopLayout || mobileFiltersOpen}>
-              <Card variant="outlined" sx={{ borderRadius: CARD_RADIUS }}>
-                <CardContent>
-                  <Box className={styles.filtersStack}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Typography variant="h6">Filters</Typography>
-                      {!isDesktopLayout && (
-                        <Button
-                          size="small"
-                          onClick={() => setMobileFiltersOpen(false)}
-                          sx={{ borderRadius: INPUT_RADIUS }}
-                        >
-                          Hide filters
-                        </Button>
-                      )}
-                    </Box>
-                    <Divider />
-                    <TextField
-                      select
-                      label="Status"
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
-                      value={statusFilter}
-                      onChange={(event) => {
-                        setStatusFilter(event.target.value as SubmissionStatus | '');
-                        setPageFilter(1);
-                      }}
-                      fullWidth
-                    >
-                      {STATUS_OPTIONS.map((option) => (
-                        <MenuItem key={option.value || 'all'} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    <TextField
-                      select
-                      label="Priority"
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
-                      value={priorityFilter}
-                      onChange={(event) => {
-                        setPriorityFilter(event.target.value as SubmissionPriority | '');
-                        setPageFilter(1);
-                      }}
-                      fullWidth
-                    >
-                      {PRIORITY_OPTIONS.map((option) => (
-                        <MenuItem key={option.value || 'all-priority'} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    <TextField
-                      select
-                      label="Broker"
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
-                      value={brokerIdFilter}
-                      onChange={(event) => {
-                        setBrokerIdFilter(event.target.value);
-                        setPageFilter(1);
-                      }}
-                      fullWidth
-                    >
-                      <MenuItem value="">All brokers</MenuItem>
-                      {brokerQuery.data?.map((broker) => (
-                        <MenuItem key={broker.id} value={String(broker.id)}>
-                          {broker.name}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      onClick={clearAllFilters}
-                      sx={{ borderRadius: INPUT_RADIUS }}
-                    >
-                      Clear all filters
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+            <Tooltip title="Show filters">
+              <IconButton
+                onClick={() => setMobileFiltersOpen((prev) => !prev)}
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  mb: 1.5,
+                  display: { xs: 'inline-flex', lg: 'none' },
+                }}
+                aria-label="Show filters"
+              >
+                <FilterList />
+              </IconButton>
+            </Tooltip>
+
+            <Box sx={{ display: { xs: 'none', lg: 'block' } }}>{renderFiltersPanel()}</Box>
+            <Collapse in={mobileFiltersOpen}>
+              <Box sx={{ display: { xs: 'block', lg: 'none' } }}>{renderFiltersPanel()}</Box>
             </Collapse>
           </Box>
 
@@ -398,13 +409,7 @@ function SubmissionsPageContent() {
 
 export default function SubmissionsPage() {
   return (
-    <Suspense
-      fallback={
-        <Container maxWidth={false} className={styles.pageContainer}>
-          Loading submissions page...
-        </Container>
-      }
-    >
+    <Suspense fallback={null}>
       <SubmissionsPageContent />
     </Suspense>
   );

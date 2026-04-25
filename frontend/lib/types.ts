@@ -89,3 +89,19 @@ export interface SubmissionListFilters {
   companySearch?: string;
   page?: number;
 }
+
+export interface AuthSession {
+  id: number | null;
+  username: string | null;
+  isAuthenticated: boolean;
+}
+
+export interface LoginPayload {
+  username: string;
+  password: string;
+}
+
+export interface SignupPayload {
+  username: string;
+  password: string;
+}

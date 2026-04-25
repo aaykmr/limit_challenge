@@ -21,6 +21,7 @@ import {
   CardContent,
   CardHeader,
   Chip,
+  CircularProgress,
   Container,
   Divider,
   Link as MuiLink,
@@ -35,10 +36,13 @@ import {
 } from '@mui/material';
 import { type Theme } from '@mui/material/styles';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
+import { useSession } from '@/lib/hooks/useAuth';
 import { useSubmissionDetail } from '@/lib/hooks/useSubmissions';
 import type { SubmissionDetail, SubmissionStatus } from '@/lib/types';
+import PriorityCaretIcon from '@/app/components/PriorityCaretIcon';
 
 const CARD_RADIUS = 3;
 
@@ -84,34 +88,6 @@ function getPriorityChevronCount(value: SubmissionDetail['priority']) {
   return 1;
 }
 
-function PriorityCaretIcon({ level }: { level: 1 | 2 | 3 }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      {level >= 1 && (
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12 1.4L19.2066 8.02618L18.4738 8.70663L12 2.6L5.52617 8.70663L4.79338 8.02618L12 1.4Z"
-        />
-      )}
-      {level >= 2 && (
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12 5.9L19.2066 12.5262L18.4738 13.2066L12 7.1L5.52617 13.2066L4.79338 12.5262L12 5.9Z"
-        />
-      )}
-      {level >= 3 && (
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12 10.4L19.2066 17.0262L18.4738 17.7066L12 11.6L5.52617 17.7066L4.79338 17.0262L12 10.4Z"
-        />
-      )}
-    </svg>
-  );
-}
-
 function PriorityIndicator({
   priority,
   priorityDisplay,
@@ -129,7 +105,7 @@ function PriorityIndicator({
           color: getPriorityColor(theme, priority),
         })}
       >
-        <PriorityCaretIcon level={getPriorityChevronCount(priority) as 1 | 2 | 3} />
+        <PriorityCaretIcon level={getPriorityChevronCount(priority) as 1 | 2 | 3} size={28} />
       </Box>
     </Tooltip>
   );
@@ -429,8 +405,39 @@ function SubmissionDetailView({ data }: { data: SubmissionDetail }) {
 export default function SubmissionDetailPage() {
   const params = useParams<{ id: string }>();
   const submissionId = params?.id ?? '';
+  const router = useRouter();
+  const [isClientHydrated, setIsClientHydrated] = useState(false);
+  const sessionQuery = useSession();
 
   const detailQuery = useSubmissionDetail(submissionId);
+
+  useEffect(() => {
+    setIsClientHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (sessionQuery.isSuccess && !sessionQuery.data.isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [router, sessionQuery.isSuccess, sessionQuery.data]);
+
+  if (!isClientHydrated || sessionQuery.isLoading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 6 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress size={64} thickness={4.5} />
+        </Box>
+      </Container>
+    );
+  }
+
+  if (sessionQuery.isError) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 6 }}>
+        Unable to verify session right now. Please refresh.
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 6 }}>
