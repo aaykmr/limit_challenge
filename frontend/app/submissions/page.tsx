@@ -26,7 +26,7 @@ import {
 } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
 import { useSession } from '@/lib/hooks/useAuth';
@@ -51,6 +51,7 @@ const PRIORITY_OPTIONS: { label: string; value: SubmissionPriority | '' }[] = [
 ];
 const CARD_RADIUS = 3;
 const INPUT_RADIUS = '100px';
+const emptySubscribe = () => () => {};
 
 function SubmissionsPageContent() {
   const router = useRouter();
@@ -70,7 +71,11 @@ function SubmissionsPageContent() {
   const [companyInput, setCompanyInput] = useState(initialCompanyQuery);
   const [pageFilter, setPageFilter] = useState(initialPage);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [isClientHydrated, setIsClientHydrated] = useState(false);
+  const isClientHydrated = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
   const sessionQuery = useSession();
 
   const filters = useMemo(
@@ -143,10 +148,6 @@ function SubmissionsPageContent() {
     setCompanyInput('');
     setPageFilter(1);
   };
-
-  useEffect(() => {
-    setIsClientHydrated(true);
-  }, []);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -346,7 +347,14 @@ function SubmissionsPageContent() {
                     </Typography>
                   )}
                 {!submissionsQuery.isLoading && !submissionsQuery.isError && results.length > 0 && (
-                  <Box sx={{ border: 'none', borderColor: 'divider', borderRadius: CARD_RADIUS, overflow: 'hidden' }}>
+                  <Box
+                    sx={{
+                      border: 'none',
+                      borderColor: 'divider',
+                      borderRadius: CARD_RADIUS,
+                      overflow: 'hidden',
+                    }}
+                  >
                     <Table size="small">
                       <TableHead>
                         <TableRow>
@@ -379,7 +387,10 @@ function SubmissionsPageContent() {
                               />
                             </TableCell>
                             <TableCell>
-                              {renderPriorityIndicator(submission.priority, submission.priorityDisplay)}
+                              {renderPriorityIndicator(
+                                submission.priority,
+                                submission.priorityDisplay,
+                              )}
                             </TableCell>
                             <TableCell>{submission.documentCount}</TableCell>
                             <TableCell>{submission.noteCount}</TableCell>

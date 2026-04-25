@@ -37,7 +37,7 @@ import {
 import { type Theme } from '@mui/material/styles';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 import { useSession } from '@/lib/hooks/useAuth';
 import { useSubmissionDetail } from '@/lib/hooks/useSubmissions';
@@ -45,6 +45,7 @@ import type { SubmissionDetail, SubmissionStatus } from '@/lib/types';
 import PriorityCaretIcon from '@/app/components/PriorityCaretIcon';
 
 const CARD_RADIUS = 3;
+const emptySubscribe = () => () => {};
 
 function getStatusChipColor(status: SubmissionStatus): 'info' | 'warning' | 'success' | 'default' {
   if (status === 'new') return 'info';
@@ -180,7 +181,11 @@ function SubmissionDetailView({ data }: { data: SubmissionDetail }) {
             <Stack alignItems="flex-end" spacing={0.75}>
               <PriorityIndicator priority={data.priority} priorityDisplay={data.priorityDisplay} />
               <Tooltip title={`Status: ${data.statusDisplay}`} arrow>
-                <Chip label={data.statusDisplay} size="small" color={getStatusChipColor(data.status)} />
+                <Chip
+                  label={data.statusDisplay}
+                  size="small"
+                  color={getStatusChipColor(data.status)}
+                />
               </Tooltip>
             </Stack>
           }
@@ -306,7 +311,11 @@ function SubmissionDetailView({ data }: { data: SubmissionDetail }) {
                         secondaryTypographyProps={{ component: 'div' }}
                         primary={
                           document.fileUrl ? (
-                            <MuiLink href={document.fileUrl} target="_blank" rel="noopener noreferrer">
+                            <MuiLink
+                              href={document.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               {document.title}
                               <OpenInNew sx={{ fontSize: 14, ml: 0.5, verticalAlign: 'middle' }} />
                             </MuiLink>
@@ -406,14 +415,14 @@ export default function SubmissionDetailPage() {
   const params = useParams<{ id: string }>();
   const submissionId = params?.id ?? '';
   const router = useRouter();
-  const [isClientHydrated, setIsClientHydrated] = useState(false);
+  const isClientHydrated = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
   const sessionQuery = useSession();
 
   const detailQuery = useSubmissionDetail(submissionId);
-
-  useEffect(() => {
-    setIsClientHydrated(true);
-  }, []);
 
   useEffect(() => {
     if (sessionQuery.isSuccess && !sessionQuery.data.isAuthenticated) {

@@ -25,16 +25,31 @@ export default function AppNavbar() {
   }
 
   return (
-    <AppBar position="sticky" color="inherit" elevation={0} sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
+    <AppBar
+      position="sticky"
+      color="inherit"
+      elevation={0}
+      sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
+    >
       <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Typography variant="h6" component={Link} href="/submissions" sx={{ textDecoration: 'none', color: 'inherit' }}>
+        <Typography
+          variant="h6"
+          component={Link}
+          href="/submissions"
+          sx={{ textDecoration: 'none', color: 'inherit' }}
+        >
           Submission Tracker
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Typography variant="body2" color="text.secondary">
             {sessionQuery.data?.username}
           </Typography>
-          <Button variant="outlined" size="small" onClick={handleLogout} disabled={logoutMutation.isPending}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleLogout}
+            disabled={logoutMutation.isPending}
+          >
             Logout
           </Button>
         </Box>

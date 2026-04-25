@@ -1,15 +1,6 @@
 'use client';
 
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
@@ -57,9 +48,18 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
   };
 
   const errorMessage =
-    (mutation.error as { response?: { data?: { detail?: string } } } | null)?.response?.data?.detail ||
-    (mutation.error as { response?: { data?: { password?: string[]; username?: string[] } } } | null)?.response?.data?.password?.[0] ||
-    (mutation.error as { response?: { data?: { password?: string[]; username?: string[] } } } | null)?.response?.data?.username?.[0] ||
+    (mutation.error as { response?: { data?: { detail?: string } } } | null)?.response?.data
+      ?.detail ||
+    (
+      mutation.error as {
+        response?: { data?: { password?: string[]; username?: string[] } };
+      } | null
+    )?.response?.data?.password?.[0] ||
+    (
+      mutation.error as {
+        response?: { data?: { password?: string[]; username?: string[] } };
+      } | null
+    )?.response?.data?.username?.[0] ||
     'Authentication failed. Please try again.';
 
   return (
@@ -119,7 +119,9 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
                 Don&apos;t have an account? Sign up
               </Button>
 
-              {mode === 'login' && mutation.isError && <Alert severity="error">{errorMessage}</Alert>}
+              {mode === 'login' && mutation.isError && (
+                <Alert severity="error">{errorMessage}</Alert>
+              )}
             </Stack>
           </CardContent>
         </Card>
@@ -170,7 +172,9 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
                 Already have an account? Log in
               </Button>
 
-              {mode === 'signup' && mutation.isError && <Alert severity="error">{errorMessage}</Alert>}
+              {mode === 'signup' && mutation.isError && (
+                <Alert severity="error">{errorMessage}</Alert>
+              )}
             </Stack>
           </CardContent>
         </Card>

@@ -6,7 +6,11 @@ interface PriorityCaretIconProps {
   strokeWidth?: number;
 }
 
-export default function PriorityCaretIcon({ level, size = 24, strokeWidth = 2.4 }: PriorityCaretIconProps) {
+export default function PriorityCaretIcon({
+  level,
+  size = 24,
+  strokeWidth = 2.4,
+}: PriorityCaretIconProps) {
   return (
     <svg
       width={size}
