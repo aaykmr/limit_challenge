@@ -1,21 +1,38 @@
 'use client';
 
+import FilterList from '@mui/icons-material/FilterList';
 import {
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
+  Chip,
+  Collapse,
+  CircularProgress,
   Container,
   Divider,
+  Pagination,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
   MenuItem,
-  Stack,
   TextField,
+  Tooltip,
   Typography,
+  IconButton,
+  useMediaQuery,
 } from '@mui/material';
-import { useMemo, useState } from 'react';
+import type { Theme } from '@mui/material/styles';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 
 import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
 import { useSubmissionsList } from '@/lib/hooks/useSubmissions';
-import { SubmissionStatus } from '@/lib/types';
+import { SubmissionStatus, SubmissionPriority } from '@/lib/types';
+import styles from './page.module.scss';
 
 const STATUS_OPTIONS: { label: string; value: SubmissionStatus | '' }[] = [
   { label: 'All statuses', value: '' },
@@ -25,96 +42,370 @@ const STATUS_OPTIONS: { label: string; value: SubmissionStatus | '' }[] = [
   { label: 'Lost', value: 'lost' },
 ];
 
-export default function SubmissionsPage() {
-  const [status, setStatus] = useState<SubmissionStatus | ''>('');
-  const [brokerId, setBrokerId] = useState('');
-  const [companyQuery, setCompanyQuery] = useState('');
+const PRIORITY_OPTIONS: { label: string; value: SubmissionPriority | '' }[] = [
+  { label: 'All priorities', value: '' },
+  { label: 'High', value: 'high' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'Low', value: 'low' },
+];
+const CARD_RADIUS = 3;
+const INPUT_RADIUS = '100px';
+
+function SubmissionsPageContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialStatus = (searchParams.get('status') as SubmissionStatus | '') || '';
+  const initialPriority = (searchParams.get('priority') as SubmissionPriority | '') || '';
+  const initialBrokerId = searchParams.get('brokerId') || '';
+  const initialCompanyQuery = searchParams.get('companySearch') || '';
+  const initialPage = Number(searchParams.get('page') || '1');
+
+  const [statusFilter, setStatusFilter] = useState<SubmissionStatus | ''>(initialStatus);
+  const [priorityFilter, setPriorityFilter] = useState<SubmissionPriority | ''>(initialPriority);
+  const [brokerIdFilter, setBrokerIdFilter] = useState(initialBrokerId);
+  const [companySearchFilter, setCompanySearchFilter] = useState(initialCompanyQuery);
+  const [companyInput, setCompanyInput] = useState(initialCompanyQuery);
+  const [pageFilter, setPageFilter] = useState(initialPage);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const isDesktopLayout = useMediaQuery('(min-width:1300px)');
 
   const filters = useMemo(
     () => ({
-      status: status || undefined,
-      brokerId: brokerId || undefined,
-      companySearch: companyQuery || undefined,
+      status: statusFilter || undefined,
+      priority: priorityFilter || undefined,
+      brokerId: brokerIdFilter || undefined,
+      companySearch: companySearchFilter || undefined,
+      page: pageFilter,
     }),
-    [status, brokerId, companyQuery],
+    [statusFilter, priorityFilter, brokerIdFilter, companySearchFilter, pageFilter],
   );
 
   const submissionsQuery = useSubmissionsList(filters);
   const brokerQuery = useBrokerOptions();
+  const totalCount = submissionsQuery.data?.count ?? 0;
+  const results = submissionsQuery.data?.results ?? [];
+  const pageCount = Math.ceil(totalCount / 10);
+  const isDebouncingCompanySearch = companyInput !== companySearchFilter;
+  const showFiltersLoader =
+    submissionsQuery.isLoading ||
+    submissionsQuery.isFetching ||
+    brokerQuery.isLoading ||
+    brokerQuery.isFetching ||
+    isDebouncingCompanySearch;
+
+  const getStatusColor = (value: SubmissionStatus) => {
+    if (value === 'new') return 'info';
+    if (value === 'in_review') return 'warning';
+    if (value === 'closed') return 'success';
+    return 'default';
+  };
+
+  const getPriorityColor = (theme: Theme, value: SubmissionPriority) => {
+    if (value === 'high') return theme.palette.error.main;
+    if (value === 'medium') return theme.palette.warning.main;
+    return theme.palette.info.main;
+  };
+
+  const getPriorityChevronCount = (value: SubmissionPriority) => {
+    if (value === 'high') return 3;
+    if (value === 'medium') return 2;
+    return 1;
+  };
+
+  const PriorityCaretIcon = ({ level }: { level: 1 | 2 | 3 }) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      {level >= 1 && (
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M12 0.265198L19.2066 8.02618L18.4738 8.70663L12 1.73481L5.52617 8.70663L4.79338 8.02618L12 0.265198Z"
+        />
+      )}
+      {level >= 2 && (
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M12 4.7652L19.2066 12.5262L18.4738 13.2066L12 6.23481L5.52617 13.2066L4.79338 12.5262L12 4.7652Z"
+        />
+      )}
+      {level >= 3 && (
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M12 9.265198L19.2066 17.0262L18.4738 17.7066L12 10.7348L5.52617 17.7066L4.79338 17.0262L12 9.265198Z"
+        />
+      )}
+    </svg>
+  );
+
+  const renderPriorityIndicator = (priority: SubmissionPriority, priorityDisplay: string) => (
+    <Tooltip title={`Priority: ${priorityDisplay}`} arrow>
+      <Box
+        sx={(theme) => ({
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0.15,
+          color: getPriorityColor(theme, priority),
+        })}
+      >
+        <PriorityCaretIcon level={getPriorityChevronCount(priority) as 1 | 2 | 3} />
+      </Box>
+    </Tooltip>
+  );
+
+  const onPageChange = (_event: React.ChangeEvent<unknown>, nextPage: number) => {
+    setPageFilter(nextPage);
+  };
+
+  const clearAllFilters = () => {
+    setStatusFilter('');
+    setPriorityFilter('');
+    setBrokerIdFilter('');
+    setCompanySearchFilter('');
+    setCompanyInput('');
+    setPageFilter(1);
+  };
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      if (companyInput !== companySearchFilter) {
+        setCompanySearchFilter(companyInput);
+        setPageFilter(1);
+      }
+    }, 2000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [companyInput, companySearchFilter]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (statusFilter) params.set('status', statusFilter);
+    if (priorityFilter) params.set('priority', priorityFilter);
+    if (brokerIdFilter) params.set('brokerId', brokerIdFilter);
+    if (companySearchFilter) params.set('companySearch', companySearchFilter);
+    if (pageFilter > 1) params.set('page', String(pageFilter));
+
+    const query = params.toString();
+    const nextUrl = query ? `${pathname}?${query}` : pathname;
+    window.history.replaceState(null, '', nextUrl);
+  }, [statusFilter, priorityFilter, brokerIdFilter, companySearchFilter, pageFilter, pathname]);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 6 }}>
-      <Stack spacing={4}>
+    <Container maxWidth={false} className={styles.pageContainer}>
+      <Box className={styles.pageStack}>
         <Box>
           <Typography variant="h4" component="h1">
             Submissions
           </Typography>
           <Typography color="text.secondary">
-            Filters update the query parameters and drive backend filtering. Hook these inputs to
-            your API calls when you implement the actual data fetching.
+            Filter by status, priority, broker, and company name to inspect incoming submissions.
           </Typography>
         </Box>
 
-        <Card variant="outlined">
-          <CardContent>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
-                select
-                label="Status"
-                value={status}
-                onChange={(event) => setStatus(event.target.value as SubmissionStatus | '')}
-                fullWidth
-              >
-                {STATUS_OPTIONS.map((option) => (
-                  <MenuItem key={option.value || 'all'} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                label="Broker"
-                value={brokerId}
-                onChange={(event) => setBrokerId(event.target.value)}
-                fullWidth
-                helperText="Populate options via /api/brokers"
-              >
-                <MenuItem value="">All brokers</MenuItem>
-                {brokerQuery.data?.map((broker) => (
-                  <MenuItem key={broker.id} value={String(broker.id)}>
-                    {broker.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                label="Company search"
-                value={companyQuery}
-                onChange={(event) => setCompanyQuery(event.target.value)}
-                fullWidth
-                helperText="Send as ?companySearch=..."
-              />
-            </Stack>
-          </CardContent>
-        </Card>
+        <Box className={styles.layoutGrid}>
+          <Box>
+            {!isDesktopLayout && (
+              <Tooltip title="Show filters">
+                <IconButton
+                  onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+                  sx={{ border: '1px solid', borderColor: 'divider', mb: 1.5 }}
+                  aria-label="Show filters"
+                >
+                  <FilterList />
+                </IconButton>
+              </Tooltip>
+            )}
+            <Collapse in={isDesktopLayout || mobileFiltersOpen}>
+              <Card variant="outlined" sx={{ borderRadius: CARD_RADIUS }}>
+                <CardContent>
+                  <Box className={styles.filtersStack}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Typography variant="h6">Filters</Typography>
+                      {!isDesktopLayout && (
+                        <Button
+                          size="small"
+                          onClick={() => setMobileFiltersOpen(false)}
+                          sx={{ borderRadius: INPUT_RADIUS }}
+                        >
+                          Hide filters
+                        </Button>
+                      )}
+                    </Box>
+                    <Divider />
+                    <TextField
+                      select
+                      label="Status"
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
+                      value={statusFilter}
+                      onChange={(event) => {
+                        setStatusFilter(event.target.value as SubmissionStatus | '');
+                        setPageFilter(1);
+                      }}
+                      fullWidth
+                    >
+                      {STATUS_OPTIONS.map((option) => (
+                        <MenuItem key={option.value || 'all'} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <TextField
+                      select
+                      label="Priority"
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
+                      value={priorityFilter}
+                      onChange={(event) => {
+                        setPriorityFilter(event.target.value as SubmissionPriority | '');
+                        setPageFilter(1);
+                      }}
+                      fullWidth
+                    >
+                      {PRIORITY_OPTIONS.map((option) => (
+                        <MenuItem key={option.value || 'all-priority'} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <TextField
+                      select
+                      label="Broker"
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
+                      value={brokerIdFilter}
+                      onChange={(event) => {
+                        setBrokerIdFilter(event.target.value);
+                        setPageFilter(1);
+                      }}
+                      fullWidth
+                    >
+                      <MenuItem value="">All brokers</MenuItem>
+                      {brokerQuery.data?.map((broker) => (
+                        <MenuItem key={broker.id} value={String(broker.id)}>
+                          {broker.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      onClick={clearAllFilters}
+                      sx={{ borderRadius: INPUT_RADIUS }}
+                    >
+                      Clear all filters
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Collapse>
+          </Box>
 
-        <Card variant="outlined">
-          <CardContent>
-            <Stack spacing={2}>
-              <Typography variant="h6">Submission list</Typography>
-              <Typography color="text.secondary">
-                Hook `submissionsQuery` to render rows, totals, and pagination states. The query is
-                disabled by default so no network calls fire until you enable it.
-              </Typography>
-              <Divider />
-              <Box>
-                <pre style={{ margin: 0, fontSize: 14 }}>
-                  {JSON.stringify({ filters, queryKey: submissionsQuery.queryKey }, null, 2)}
-                </pre>
+          <Card variant="outlined" sx={{ borderRadius: CARD_RADIUS }}>
+            <CardContent>
+              <Box className={styles.listStack}>
+                <Box className={styles.listHeader}>
+                  <Box className={styles.titleGroup}>
+                    <Typography variant="h6">Submission list</Typography>
+                    {showFiltersLoader && (
+                      <CircularProgress size={20} thickness={5} sx={{ color: '#0f62fe' }} />
+                    )}
+                  </Box>
+                  <Box className={styles.searchGroup}>
+                    <TextField
+                      label="Company search"
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: INPUT_RADIUS } }}
+                      value={companyInput}
+                      onChange={(event) => setCompanyInput(event.target.value)}
+                      size="small"
+                    />
+                  </Box>
+                </Box>
+                <Divider />
+                {submissionsQuery.isLoading && <Typography>Loading submissions...</Typography>}
+                {submissionsQuery.isError && (
+                  <Alert severity="error">
+                    Unable to load submissions. Please refresh and try again.
+                  </Alert>
+                )}
+                {!submissionsQuery.isLoading &&
+                  !submissionsQuery.isError &&
+                  results.length === 0 && (
+                    <Typography color="text.secondary">
+                      No submissions match these filters.
+                    </Typography>
+                  )}
+                {!submissionsQuery.isLoading && !submissionsQuery.isError && results.length > 0 && (
+                  <Box sx={{ border: 'none', borderColor: 'divider', borderRadius: CARD_RADIUS, overflow: 'hidden' }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Company</TableCell>
+                          <TableCell>Broker</TableCell>
+                          <TableCell>Owner</TableCell>
+                          <TableCell>Status</TableCell>
+                          <TableCell>Priority</TableCell>
+                          <TableCell>Docs</TableCell>
+                          <TableCell>Notes</TableCell>
+                          <TableCell>Latest note</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {results.map((submission) => (
+                          <TableRow
+                            key={submission.id}
+                            hover
+                            className={styles.clickableRow}
+                            onClick={() => router.push(`/submissions/${submission.id}`)}
+                          >
+                            <TableCell>{submission.company.legalName}</TableCell>
+                            <TableCell>{submission.broker.name}</TableCell>
+                            <TableCell>{submission.owner.fullName}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={submission.statusDisplay}
+                                size="small"
+                                color={getStatusColor(submission.status)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {renderPriorityIndicator(submission.priority, submission.priorityDisplay)}
+                            </TableCell>
+                            <TableCell>{submission.documentCount}</TableCell>
+                            <TableCell>{submission.noteCount}</TableCell>
+                            <TableCell>{submission.latestNote?.bodyPreview || '-'}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                )}
+                {pageCount > 1 && (
+                  <Box className={styles.paginationRow}>
+                    <Typography variant="body2" color="text.secondary">
+                      Total count: {totalCount}
+                    </Typography>
+                    <Pagination page={pageFilter} count={pageCount} onChange={onPageChange} />
+                  </Box>
+                )}
               </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Stack>
+            </CardContent>
+          </Card>
+        </Box>
+      </Box>
     </Container>
+  );
+}
+
+export default function SubmissionsPage() {
+  return (
+    <Suspense
+      fallback={
+        <Container maxWidth={false} className={styles.pageContainer}>
+          Loading submissions page...
+        </Container>
+      }
+    >
+      <SubmissionsPageContent />
+    </Suspense>
   );
 }

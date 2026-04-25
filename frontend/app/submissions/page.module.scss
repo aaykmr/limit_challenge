@@ -1,0 +1,72 @@
+.pageContainer {
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+
+.pageStack {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.layoutGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (min-width: 1300px) {
+  .layoutGrid {
+    grid-template-columns: 280px 1fr;
+  }
+}
+
+.filtersStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.listStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.listHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .listHeader {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.searchGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.paginationRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}

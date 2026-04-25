@@ -1,0 +1,9 @@
+.venv/
+venv/
+
+# python cache artifacts
+__pycache__/
+*.py[cod]
+
+# local sqlite db
+db.sqlite3

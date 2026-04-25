@@ -46,13 +46,17 @@ class SubmissionListSerializer(serializers.ModelSerializer):
     document_count = serializers.IntegerField(read_only=True, default=0)
     note_count = serializers.IntegerField(read_only=True, default=0)
     latest_note = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    priority_display = serializers.CharField(source="get_priority_display", read_only=True)
 
     class Meta:
         model = models.Submission
         fields = [
             "id",
             "status",
+            "status_display",
             "priority",
+            "priority_display",
             "summary",
             "created_at",
             "updated_at",
@@ -85,13 +89,17 @@ class SubmissionDetailSerializer(serializers.ModelSerializer):
     contacts = ContactSerializer(many=True, read_only=True)
     documents = DocumentSerializer(many=True, read_only=True)
     notes = NoteSerializer(many=True, read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    priority_display = serializers.CharField(source="get_priority_display", read_only=True)
 
     class Meta:
         model = models.Submission
         fields = [
             "id",
             "status",
+            "status_display",
             "priority",
+            "priority_display",
             "summary",
             "created_at",
             "updated_at",

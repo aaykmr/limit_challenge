@@ -10,7 +10,7 @@ class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = SubmissionFilterSet
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related("broker", "company", "owner")
 
         if self.action == "list":
             latest_note = models.Note.objects.filter(submission_id=OuterRef("pk")).order_by("-created_at")

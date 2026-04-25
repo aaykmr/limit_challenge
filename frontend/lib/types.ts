@@ -29,7 +29,9 @@ export interface NoteSummary {
 export interface SubmissionListItem {
   id: number;
   status: SubmissionStatus;
+  statusDisplay: string;
   priority: SubmissionPriority;
+  priorityDisplay: string;
   summary: string;
   createdAt: string;
   updatedAt: string;
@@ -82,6 +84,8 @@ export interface PaginatedResponse<T> {
 
 export interface SubmissionListFilters {
   status?: SubmissionStatus;
+  priority?: SubmissionPriority;
   brokerId?: string;
   companySearch?: string;
+  page?: number;
 }
