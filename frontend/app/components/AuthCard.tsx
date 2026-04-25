@@ -1,6 +1,5 @@
 'use client';
 
-import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
@@ -62,123 +61,119 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
     )?.response?.data?.username?.[0] ||
     'Authentication failed. Please try again.';
 
+  const isSubmitting = mutation.isPending;
+
   return (
-    <Box sx={{ width: '100%', maxWidth: 420, perspective: '1200px' }}>
-      <Box
-        sx={{
-          position: 'relative',
-          width: '100%',
-          minHeight: 400,
-          transformStyle: 'preserve-3d',
-          transition: 'transform 450ms ease',
-          transform: mode === 'signup' ? 'rotateY(180deg)' : 'rotateY(0deg)',
-        }}
-      >
-        <Card
-          variant="outlined"
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: 3,
-            backfaceVisibility: 'hidden',
-          }}
+    <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <header className="space-y-2">
+        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Dashboard Access</h1>
+        <p className="text-lg text-slate-500">
+          Login or sign up to manage your property dashboard.
+        </p>
+      </header>
+
+      <div className="mt-6 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
+        <button
+          type="button"
+          onClick={() => setMode('login')}
+          className={`rounded-xl px-4 py-3 text-xl font-semibold transition ${
+            mode === 'login'
+              ? 'bg-white text-slate-900 ring-2 ring-blue-500'
+              : 'text-slate-600 hover:text-slate-800'
+          }`}
         >
-          <CardContent>
-            <Stack spacing={2}>
-              <Box textAlign="center">
-                <Typography variant="h5">Welcome back</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Log in to continue to the submission tracker.
-                </Typography>
-              </Box>
-
-              <Box component="form" onSubmit={handleLoginSubmit}>
-                <Stack spacing={2}>
-                  <TextField
-                    label="Username"
-                    value={loginUsername}
-                    onChange={(e) => setLoginUsername(e.target.value)}
-                    required
-                    fullWidth
-                  />
-                  <TextField
-                    label="Password"
-                    type="password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                    fullWidth
-                  />
-                  <Button type="submit" variant="contained" disabled={loginMutation.isPending}>
-                    Log in
-                  </Button>
-                </Stack>
-              </Box>
-
-              <Button type="button" onClick={() => setMode('signup')}>
-                Don&apos;t have an account? Sign up
-              </Button>
-
-              {mode === 'login' && mutation.isError && (
-                <Alert severity="error">{errorMessage}</Alert>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card
-          variant="outlined"
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: 3,
-            backfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)',
-          }}
+          Login
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('signup')}
+          className={`rounded-xl px-4 py-3 text-xl font-semibold transition ${
+            mode === 'signup'
+              ? 'bg-white text-slate-900 ring-2 ring-blue-500'
+              : 'text-slate-600 hover:text-slate-800'
+          }`}
         >
-          <CardContent>
-            <Stack spacing={2}>
-              <Box textAlign="center">
-                <Typography variant="h5">Create account</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Sign up with username and password.
-                </Typography>
-              </Box>
+          Signup
+        </button>
+      </div>
 
-              <Box component="form" onSubmit={handleSignupSubmit}>
-                <Stack spacing={2}>
-                  <TextField
-                    label="Username"
-                    value={signupUsername}
-                    onChange={(e) => setSignupUsername(e.target.value)}
-                    required
-                    fullWidth
-                  />
-                  <TextField
-                    label="Password"
-                    type="password"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    required
-                    fullWidth
-                  />
-                  <Button type="submit" variant="contained" disabled={signupMutation.isPending}>
-                    Sign up
-                  </Button>
-                </Stack>
-              </Box>
+      {mode === 'login' ? (
+        <form onSubmit={handleLoginSubmit} className="mt-8 space-y-5">
+          <label className="block">
+            <span className="mb-2 block text-2xl font-semibold text-slate-700">Username</span>
+            <input
+              value={loginUsername}
+              onChange={(e) => setLoginUsername(e.target.value)}
+              required
+              autoComplete="username"
+              className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-3xl text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-2xl font-semibold text-slate-700">Password</span>
+            <input
+              type="password"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-3xl text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </label>
 
-              <Button type="button" onClick={() => setMode('login')}>
-                Already have an account? Log in
-              </Button>
+          {mutation.isError ? (
+            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </p>
+          ) : null}
 
-              {mode === 'signup' && mutation.isError && (
-                <Alert severity="error">{errorMessage}</Alert>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
-    </Box>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-2xl font-semibold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? 'Logging in...' : 'Log in'}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleSignupSubmit} className="mt-8 space-y-5">
+          <label className="block">
+            <span className="mb-2 block text-2xl font-semibold text-slate-700">Username</span>
+            <input
+              value={signupUsername}
+              onChange={(e) => setSignupUsername(e.target.value)}
+              required
+              autoComplete="username"
+              className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-3xl text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-2xl font-semibold text-slate-700">Password</span>
+            <input
+              type="password"
+              value={signupPassword}
+              onChange={(e) => setSignupPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-3xl text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </label>
+
+          {mutation.isError ? (
+            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </p>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-2xl font-semibold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? 'Signing up...' : 'Sign up'}
+          </button>
+        </form>
+      )}
+    </section>
   );
 }
