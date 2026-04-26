@@ -18,14 +18,14 @@ export default function LoginPage() {
 
   if (sessionQuery.isLoading || (sessionQuery.isSuccess && sessionQuery.data.isAuthenticated)) {
     return (
-      <main className="mx-auto flex w-full max-w-6xl justify-center px-6 py-20">
-        <div className="h-14 w-14 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+      <main className="mx-auto flex w-full max-w-5xl justify-center px-4 py-12">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-slate-900" />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl justify-center px-6 py-16">
+    <main className="mx-auto flex w-full max-w-5xl justify-center px-4 py-10">
       <AuthCard />
     </main>
   );

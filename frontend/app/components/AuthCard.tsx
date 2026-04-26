@@ -64,22 +64,18 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
   const isSubmitting = mutation.isPending;
 
   return (
-    <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-      <header className="space-y-2">
-        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Dashboard Access</h1>
-        <p className="text-lg text-slate-500">
-          Login or sign up to manage your property dashboard.
-        </p>
+    <section className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6">
+      <header>
+        <h1 className="text-lg font-semibold text-slate-900">Welcome Back</h1>
+        <p className="mt-1 text-sm text-slate-500">Log in or create an account to continue.</p>
       </header>
 
-      <div className="mt-6 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
+      <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
         <button
           type="button"
           onClick={() => setMode('login')}
-          className={`rounded-xl px-4 py-3 text-xl font-semibold transition ${
-            mode === 'login'
-              ? 'bg-white text-slate-900 ring-2 ring-blue-500'
-              : 'text-slate-600 hover:text-slate-800'
+          className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+            mode === 'login' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
           }`}
         >
           Login
@@ -87,10 +83,8 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
         <button
           type="button"
           onClick={() => setMode('signup')}
-          className={`rounded-xl px-4 py-3 text-xl font-semibold transition ${
-            mode === 'signup'
-              ? 'bg-white text-slate-900 ring-2 ring-blue-500'
-              : 'text-slate-600 hover:text-slate-800'
+          className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+            mode === 'signup' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
           }`}
         >
           Signup
@@ -98,31 +92,33 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
       </div>
 
       {mode === 'login' ? (
-        <form onSubmit={handleLoginSubmit} className="mt-8 space-y-5">
+        <form onSubmit={handleLoginSubmit} className="mt-4 space-y-3">
           <label className="block">
-            <span className="mb-2 block text-2xl font-semibold text-slate-700">Username</span>
+            <span className="mb-1 block text-xs font-medium text-slate-700">Email</span>
             <input
+              type="email"
               value={loginUsername}
               onChange={(e) => setLoginUsername(e.target.value)}
               required
               autoComplete="username"
-              className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-3xl text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
             />
           </label>
           <label className="block">
-            <span className="mb-2 block text-2xl font-semibold text-slate-700">Password</span>
+            <span className="mb-1 block text-xs font-medium text-slate-700">Password</span>
             <input
               type="password"
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-3xl text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              minLength={8}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
             />
           </label>
 
           {mutation.isError ? (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {errorMessage}
             </p>
           ) : null}
@@ -130,37 +126,39 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-2xl font-semibold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? 'Logging in...' : 'Log in'}
           </button>
         </form>
       ) : (
-        <form onSubmit={handleSignupSubmit} className="mt-8 space-y-5">
+        <form onSubmit={handleSignupSubmit} className="mt-4 space-y-3">
           <label className="block">
-            <span className="mb-2 block text-2xl font-semibold text-slate-700">Username</span>
+            <span className="mb-1 block text-xs font-medium text-slate-700">Email</span>
             <input
+              type="email"
               value={signupUsername}
               onChange={(e) => setSignupUsername(e.target.value)}
               required
               autoComplete="username"
-              className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-3xl text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
             />
           </label>
           <label className="block">
-            <span className="mb-2 block text-2xl font-semibold text-slate-700">Password</span>
+            <span className="mb-1 block text-xs font-medium text-slate-700">Password</span>
             <input
               type="password"
               value={signupPassword}
               onChange={(e) => setSignupPassword(e.target.value)}
               required
               autoComplete="new-password"
-              className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-3xl text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              minLength={8}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
             />
           </label>
 
           {mutation.isError ? (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {errorMessage}
             </p>
           ) : null}
@@ -168,7 +166,7 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-2xl font-semibold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? 'Signing up...' : 'Sign up'}
           </button>
