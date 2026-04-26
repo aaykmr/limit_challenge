@@ -7,6 +7,8 @@
 - Built a Tailwind-first login/signup experience with a compact tabbed auth card and route guard behavior for protected submissions pages.
 - Wired backend filtering/pagination and frontend query-state handling.
 - Added deployment-ready configuration for EC2-oriented workflows (service restarts, CI checks, and environment-driven secrets).
+- Added automated tests across backend and frontend (Django test suite + Jest/RTL component/hook tests).
+- CI now runs backend checks/tests and frontend tests before lint/build to catch regressions earlier.
 
 ### Tradeoffs
 
