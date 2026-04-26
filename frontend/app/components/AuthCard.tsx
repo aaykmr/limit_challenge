@@ -94,13 +94,17 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
       {mode === 'login' ? (
         <form onSubmit={handleLoginSubmit} className="mt-4 space-y-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-700">Email</span>
+            <span className="mb-1 block text-xs font-medium text-slate-700">Username</span>
             <input
-              type="email"
+              type="text"
               value={loginUsername}
               onChange={(e) => setLoginUsername(e.target.value)}
               required
+              minLength={3}
+              maxLength={150}
               autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
             />
           </label>
@@ -134,13 +138,17 @@ export default function AuthCard({ initialMode = 'login', onSuccess }: AuthCardP
       ) : (
         <form onSubmit={handleSignupSubmit} className="mt-4 space-y-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-700">Email</span>
+            <span className="mb-1 block text-xs font-medium text-slate-700">Username</span>
             <input
-              type="email"
+              type="text"
               value={signupUsername}
               onChange={(e) => setSignupUsername(e.target.value)}
               required
+              minLength={3}
+              maxLength={150}
               autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
             />
           </label>

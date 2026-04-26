@@ -12,7 +12,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (sessionQuery.isSuccess && sessionQuery.data.isAuthenticated) {
-      router.replace('/');
+      router.replace('/submissions');
     }
   }, [router, sessionQuery.isSuccess, sessionQuery.data]);
 

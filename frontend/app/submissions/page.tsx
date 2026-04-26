@@ -155,7 +155,7 @@ function SubmissionsPageContent() {
         setCompanySearchFilter(companyInput);
         setPageFilter(1);
       }
-    }, 2000);
+    }, 1000);
 
     return () => window.clearTimeout(timeoutId);
   }, [companyInput, companySearchFilter]);
