@@ -1,3 +1,44 @@
+## Solution Summary (Approach, Tradeoffs, Runbook)
+
+### Approach
+
+- Implemented a full-stack submission tracker with a Django REST backend (`/api/submissions`, `/api/submissions/<id>`, `/api/brokers`) and a Next.js frontend for list/detail workflows.
+- Added session-based authentication endpoints (`/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/session`) and integrated auth state in the frontend via React Query hooks.
+- Built a Tailwind-first login/signup experience with a compact tabbed auth card and route guard behavior for protected submissions pages.
+- Wired backend filtering/pagination and frontend query-state handling.
+- Added deployment-ready configuration for EC2-oriented workflows (service restarts, CI checks, and environment-driven secrets).
+
+### Tradeoffs
+
+- **SQLite for simplicity:** Fast local setup and easy EC2 bootstrapping, but not ideal for high-concurrency production workloads.
+- **Session auth over token auth:** Simpler for same-origin app flows and CSRF-aware Django defaults, but requires careful domain/cookie config in multi-domain deployments.
+- **Single-instance deployment target:** Lower operational overhead, but lower resilience/scalability compared to a multi-service cloud architecture.
+
+### How To Run
+
+1. **Backend**
+   ```bash
+   cd backend
+   python -m venv .venv && source .venv/bin/activate
+   pip install -r requirements.txt
+   # create backend/.env with DJANGO_SECRET_KEY=<your-secret>
+   python manage.py migrate
+   python manage.py seed_submissions  # optional
+   python manage.py runserver 0.0.0.0:8000
+   ```
+
+2. **Frontend**
+   ```bash
+   cd frontend
+   npm install
+   # create frontend/.env.local with NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
+   npm run dev
+   ```
+
+3. **Use the app**
+   - Open `http://localhost:3000/login`
+   - Authenticate, then continue to `http://localhost:3000/submissions`
+
 # Submission Tracker Take-home Challenge
 
 This repository hosts the boilerplate for the Submission Tracker assignment. It includes a Django +
