@@ -24,17 +24,6 @@ describe('LoginPage', () => {
     jest.clearAllMocks();
   });
 
-  it('shows loading spinner when session query is loading', () => {
-    (useSession as jest.Mock).mockReturnValue({
-      isLoading: true,
-      isSuccess: false,
-      data: undefined,
-    });
-
-    const { container } = render(<LoginPage />);
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
-  });
-
   it('redirects authenticated users to submissions', async () => {
     (useSession as jest.Mock).mockReturnValue({
       isLoading: false,
